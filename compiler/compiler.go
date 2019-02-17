@@ -156,7 +156,7 @@ func (c *Compiler) TargetData() llvm.TargetData {
 func (c *Compiler) selectGC() string {
 	gc := c.GC
 	if gc == "" {
-		gc = "dumb"
+		gc = "leaking"
 	}
 	return gc
 }
