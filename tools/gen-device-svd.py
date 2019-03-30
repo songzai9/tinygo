@@ -139,7 +139,10 @@ def readSVD(path, sourceURL):
                     dimIncrement = None
                 else:
                     dim = int(getText(cluster.find('dim')))
-                    dimIncrement = int(getText(cluster.find('dimIncrement')), 0)
+                    if dim == 1:
+                        dimIncrement = None
+                    else:
+                        dimIncrement = int(getText(cluster.find('dimIncrement')), 0)
                 clusterRegisters = []
                 for regEl in cluster.findall('register'):
                     clusterRegisters.extend(parseRegister(groupName or name, regEl, baseAddress + clusterOffset, clusterPrefix))
@@ -196,7 +199,6 @@ def parseBitfields(groupName, regName, fieldsEls, bitfieldPrefix=''):
     if fieldsEls:
         for fieldEl in fieldsEls[0].findall('field'):
             fieldName = getText(fieldEl.find('name'))
-            descrEls = fieldEl.findall('description')
             lsbTags = fieldEl.findall('lsb')
             if len(lsbTags) == 1:
                 lsb = int(getText(lsbTags[0]))
@@ -225,7 +227,7 @@ def parseBitfields(groupName, regName, fieldsEls, bitfieldPrefix=''):
                 })
             for enumEl in fieldEl.findall('enumeratedValues/enumeratedValue'):
                 enumName = getText(enumEl.find('name'))
-                enumDescription = getText(enumEl.find('description'))
+                enumDescription = getText(enumEl.find('description')).replace('\n', ' ')
                 enumValue = int(getText(enumEl.find('value')), 0)
                 fields.append({
                     'name':        '{}_{}{}_{}_{}'.format(groupName, bitfieldPrefix, regName, fieldName, enumName),

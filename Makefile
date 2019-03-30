@@ -38,7 +38,7 @@ fmt:
 fmt-check:
 	@unformatted=$$(gofmt -l $(FMT_PATHS)); [ -z "$$unformatted" ] && exit 0; echo "Unformatted:"; for fn in $$unformatted; do echo "  $$fn"; done; exit 1
 
-gen-device: gen-device-avr gen-device-nrf gen-device-sam gen-device-stm32
+gen-device: gen-device-avr gen-device-nrf gen-device-sam gen-device-sifive gen-device-stm32
 
 gen-device-avr:
 	./tools/gen-device-avr.py lib/avr/packs/atmega src/device/avr/
@@ -52,6 +52,10 @@ gen-device-nrf:
 gen-device-sam:
 	./tools/gen-device-svd.py lib/cmsis-svd/data/Atmel/ src/device/sam/ --source=https://github.com/posborne/cmsis-svd/tree/master/data/Atmel
 	go fmt ./src/device/sam
+
+gen-device-sifive:
+	./tools/gen-device-svd.py lib/cmsis-svd/data/SiFive/ src/device/sifive/ --source=https://github.com/AdaCore/svd2ada/tree/master/CMSIS-SVD/SiFive
+	go fmt ./src/device/sifive
 
 gen-device-stm32:
 	./tools/gen-device-svd.py lib/cmsis-svd/data/STMicro/ src/device/stm32/ --source=https://github.com/posborne/cmsis-svd/tree/master/data/STMicro
@@ -69,7 +73,7 @@ llvm-source: llvm/README.txt llvm/tools/clang/README.txt llvm/tools/lld/README.m
 
 # Configure LLVM.
 llvm-build/build.ninja: llvm-source
-	mkdir -p llvm-build; cd llvm-build; cmake -G Ninja ../llvm "-DLLVM_TARGETS_TO_BUILD=X86;ARM;AArch64;WebAssembly" "-DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=AVR" -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=OFF -DLIBCLANG_BUILD_STATIC=ON -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_ENABLE_ZLIB=OFF
+	mkdir -p llvm-build; cd llvm-build; cmake -G Ninja ../llvm "-DLLVM_TARGETS_TO_BUILD=X86;ARM;AArch64;WebAssembly" "-DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=AVR;RISCV" -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=OFF -DLIBCLANG_BUILD_STATIC=ON -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_ENABLE_ZLIB=OFF
 
 # Build LLVM.
 llvm-build: llvm-build/build.ninja
@@ -120,6 +124,7 @@ smoketest-no-avr:
 	tinygo build -size short -o test.elf -target=stm32f4disco        examples/blinky1
 	tinygo build -size short -o test.elf -target=stm32f4disco        examples/blinky2
 	tinygo build -size short -o test.elf -target=circuitplay-express examples/i2s
+	tinygo build -size short -o test.elf -target=hifive1b            examples/echo
 	tinygo build             -o wasm.wasm -target=wasm               examples/wasm/export
 	tinygo build             -o wasm.wasm -target=wasm               examples/wasm/main
 
