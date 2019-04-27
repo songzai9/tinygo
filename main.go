@@ -75,6 +75,9 @@ func Compile(pkgName, outpath string, spec *TargetSpec, config *BuildConfig, act
 	for _, flag := range spec.LDFlags {
 		ldflags = append(ldflags, strings.Replace(flag, "{root}", root, -1))
 	}
+	if spec.LDScript != "" {
+		ldflags = append(ldflags, "-T", spec.LDScript)
+	}
 
 	goroot := getGoroot()
 	if goroot == "" {
