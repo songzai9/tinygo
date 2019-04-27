@@ -1,0 +1,7 @@
+{
+	"build-tags": ["softdevice"],
+	"ldflags": [
+		"--defsym=_flash_offset=0x00026000",
+		"--defsym=_ram_offset=0x000039c0"
+	]
+}
