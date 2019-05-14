@@ -154,11 +154,10 @@ func (c *Compiler) TargetData() llvm.TargetData {
 
 // selectGC picks an appropriate GC strategy if none was provided.
 func (c *Compiler) selectGC() string {
-	gc := c.GC
-	if gc == "" {
-		gc = "leaking"
+	if c.GC != "" {
+		return c.GC
 	}
-	return gc
+	return "conservative"
 }
 
 // Compile the given package path or .go file path. Return an error when this

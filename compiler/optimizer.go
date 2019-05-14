@@ -114,6 +114,12 @@ func (c *Compiler) Optimize(optLevel, sizeLevel int, inlinerThreshold uint) erro
 	builder.Populate(modPasses)
 	modPasses.Run(c.mod)
 
+	if c.addGlobalsBitmap() {
+		if err := c.Verify(); err != nil {
+			return errors.New("GC pass caused a verification failure")
+		}
+	}
+
 	return nil
 }
 
