@@ -537,6 +537,14 @@ func (p *cgoPackage) addTypedefs() {
 			typeName = "C." + name[len("_Cgo_"):]
 			isAlias = false // C.short etc. should not be aliased to the equivalent Go type (not portable)
 		}
+		if _, ok := typedef.typeExpr.(*ast.Ident); !ok {
+			// Do not alias to avoid horrible error messages.
+			// For example, typedef'ed anonymous structs should get the type
+			// name of the struct itself (instead of showing the struct in the
+			// error message), and function pointers should be used with the
+			// right named type instead of *[0]byte.
+			isAlias = false
+		}
 		if _, ok := cgoAliases[typeName]; ok {
 			// This is a type that also exists in Go (defined in stdint.h).
 			continue
