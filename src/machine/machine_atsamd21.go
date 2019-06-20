@@ -250,14 +250,13 @@ func waitADCSync() {
 type UART struct {
 	Buffer *RingBuffer
 	Bus    *sam.SERCOM_USART_Type
+	Mode   PinMode
+	IRQVal uint32
 }
 
 var (
 	// UART0 is actually a USB CDC interface.
 	UART0 = USBCDC{Buffer: NewRingBuffer()}
-
-	// The first hardware serial port on the SAMD21. Uses the SERCOM0 interface.
-	UART1 = UART{Bus: sam.SERCOM1_USART, Buffer: NewRingBuffer()}
 )
 
 const (
@@ -300,6 +299,8 @@ func (uart UART) Configure(config UARTConfig) {
 		txpad = sercomTXPad2
 	case PA16:
 		txpad = sercomTXPad0
+	case PA22:
+		txpad = sercomTXPad0
 	default:
 		panic("Invalid TX pin for UART")
 	}
@@ -315,13 +316,15 @@ func (uart UART) Configure(config UARTConfig) {
 		rxpad = sercomRXPad3
 	case PA17:
 		rxpad = sercomRXPad1
+	case PA23:
+		rxpad = sercomRXPad1
 	default:
 		panic("Invalid RX pin for UART")
 	}
 
 	// configure pins
-	config.TX.Configure(PinConfig{Mode: PinSERCOM})
-	config.RX.Configure(PinConfig{Mode: PinSERCOM})
+	config.TX.Configure(PinConfig{Mode: uart.Mode})
+	config.RX.Configure(PinConfig{Mode: uart.Mode})
 
 	// reset SERCOM0
 	uart.Bus.CTRLA.SetBits(sam.SERCOM_USART_CTRLA_SWRST)
@@ -372,13 +375,7 @@ func (uart UART) Configure(config UARTConfig) {
 	uart.Bus.INTENSET.Set(sam.SERCOM_USART_INTENSET_RXC)
 
 	// Enable RX IRQ.
-	if config.TX == PA10 {
-		// UART0
-		arm.EnableIRQ(sam.IRQ_SERCOM0)
-	} else {
-		// UART1 which is the normal default, since UART0 is used for USBCDC.
-		arm.EnableIRQ(sam.IRQ_SERCOM1)
-	}
+	arm.EnableIRQ(uart.IRQVal)
 }
 
 // SetBaudRate sets the communication speed for the UART.
@@ -404,8 +401,8 @@ func (uart UART) WriteByte(c byte) error {
 	return nil
 }
 
-//go:export SERCOM1_IRQHandler
-func handleUART1() {
+// defaultUART1Handler handles the UART1 IRQ.
+func defaultUART1Handler() {
 	// should reset IRQ
 	UART1.Receive(byte((UART1.Bus.DATA.Get() & 0xFF)))
 	UART1.Bus.INTFLAG.SetBits(sam.SERCOM_USART_INTFLAG_RXC)

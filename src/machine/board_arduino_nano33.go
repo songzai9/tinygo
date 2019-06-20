@@ -1,23 +1,27 @@
 // +build sam,atsamd21,arduino_nano33
 
+// This contains the pin mappings for the Arduino Nano33 IoT board.
+//
+// For more information, see: https://store.arduino.cc/nano-33-iot
+//
 package machine
 
 import "device/sam"
 
 // GPIO Pins
 const (
-	D0  = PA11 // UART0 RX
-	D1  = PA10 // UART0 TX
+	RX0 = PA11 // UART0 RX
+	TX1 = PA10 // UART0 TX
 	D2  = PA14
 	D3  = PA09 // PWM available
-	D4  = PA08 // PWM available
+	D4  = PA08
 	D5  = PA15 // PWM available
 	D6  = PA20 // PWM available
-	D7  = PA21 // PWM available
-	D8  = PA06 // PWM available
+	D7  = PA21
+	D8  = PA06
 	D9  = PA07 // PWM available
-	D10 = PA18 // can be used for PWM or UART1 TX
-	D11 = PA16 // can be used for PWM or UART1 RX
+	D10 = PA18 // PWM available
+	D11 = PA16 // PWM available
 	D12 = PA19 // PWM available
 	D13 = PA17 // PWM available
 )
@@ -36,30 +40,56 @@ const (
 	LED = D13
 )
 
+// NINA-W102 Pins
+
+const (
+	NINA_MOSI   = PA12
+	NINA_MISO   = PA13
+	NINA_CS     = PA14
+	NINA_SCK    = PA15
+	NINA_GPIO0  = PA27
+	NINA_RESETN = PA08
+	NINA_ACK    = PA28
+)
+
 // UART0 aka USBCDC pins
 const (
 	USBCDC_DM_PIN = PA24
 	USBCDC_DP_PIN = PA25
 )
 
+// UART1 on the Arduino Nano 33 connects to the onboard NINA-W102 WiFi chip.
+var (
+	UART1 = UART{Bus: sam.SERCOM5_USART,
+		Buffer: NewRingBuffer(),
+		Mode:   PinSERCOMAlt,
+		IRQVal: sam.IRQ_SERCOM5,
+	}
+)
+
 // UART1 pins
 const (
-	UART_TX_PIN = D10
-	UART_RX_PIN = D11
+	UART_TX_PIN = PA22
+	UART_RX_PIN = PA23
 )
+
+//go:export SERCOM5_IRQHandler
+func handleUART1() {
+	defaultUART1Handler()
+}
 
 // I2C pins
 const (
-	SDA_PIN = PA22 // SDA: SERCOM3/PAD[0]
-	SCL_PIN = PA23 // SCL: SERCOM3/PAD[1]
+	SDA_PIN = PB08 // SDA: SERCOM4/PAD[0]
+	SCL_PIN = PB09 // SCL: SERCOM4/PAD[1]
 )
 
 // I2C on the Arduino Nano 33.
 var (
-	I2C0 = I2C{Bus: sam.SERCOM3_I2CM,
+	I2C0 = I2C{Bus: sam.SERCOM4_I2CM,
 		SDA:     SDA_PIN,
 		SCL:     SCL_PIN,
-		PinMode: PinSERCOM}
+		PinMode: PinSERCOMAlt}
 )
 
 // SPI pins
@@ -71,7 +101,7 @@ const (
 
 // SPI on the Arduino Nano 33.
 var (
-	SPI0 = SPI{Bus: sam.SERCOM4_SPI}
+	SPI0 = SPI{Bus: sam.SERCOM1_SPI}
 )
 
 // I2S pins
